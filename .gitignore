@@ -1,2 +1,7 @@
 data/
 test/
+__pycache__
+.DS_Store
+logs/
+.ipynb_checkpoints/
+checkpoints/
