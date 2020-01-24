@@ -5,3 +5,4 @@ __pycache__
 logs/
 .ipynb_checkpoints/
 checkpoints/
+./src/notebooks/.ipynb_checkpoints/
