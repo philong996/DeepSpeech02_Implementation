@@ -3,9 +3,9 @@ import os
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Conv2D, Bidirectional, LSTM, GRU, Dense
+from tensorflow.keras.layers import Conv2D, Bidirectional, LSTM, GRU, Dense, TimeDistributed
 from tensorflow.keras.layers import Dropout, BatchNormalization, LeakyReLU, PReLU
-from tensorflow.keras.layers import Input, MaxPooling2D, Reshape, MaxPool2D, Lambda, AveragePooling2D
+from tensorflow.keras.layers import Input, MaxPooling2D, Reshape, MaxPool2D, Activation, AveragePooling2D
 from tensorflow.keras.optimizers import Adam
 
 
@@ -25,7 +25,7 @@ def ctc_loss_lambda_func(y_true, y_pred):
     return loss
 
 
-def build_baseline_model(input_size, d_model, learning_rate=3e-4):
+def build_baseline_model(input_size, d_model ,learning_rate=3e-4):
 
     input_data = Input(name="input", shape=input_size)
 
@@ -52,4 +52,35 @@ def build_baseline_model(input_size, d_model, learning_rate=3e-4):
     model = Model(inputs=input_data, outputs=output_data)
     model.compile(optimizer=optimizer, loss=ctc_loss_lambda_func)
     model.summary()
+    return model
+
+
+def rnn_model(input_size, units, activation = 'relu', output_dim=29, learning_rate=3e-4):
+    """ Build a recurrent network for speech 
+    """
+    # Main acoustic input
+    input_data = Input(name='the_input', shape=(input_size[0], input_size[1]))
+    
+    # Add recurrent layer
+    simp_rnn = GRU(units, activation=activation,
+        return_sequences=True, name='rnn')(input_data)
+    
+    #Add batch normalization 
+    bn_rnn = BatchNormalization()(simp_rnn)
+    
+    #Add a TimeDistributed(Dense(output_dim)) layer
+    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn)
+    
+    #Add softmax activation layer
+    y_pred = Activation('softmax', name='softmax')(time_dense)
+    
+    #Specify the model
+    model = Model(inputs=input_data, outputs=y_pred)
+    # model.output_length = lambda x: x
+    
+    #compile model
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss=ctc_loss_lambda_func)
+    model.summary()
+    
     return model

@@ -3,6 +3,8 @@ import numpy as np
 import librosa
 import re
 
+import datetime
+import codecs
 import csv
 import os
 import pathlib
@@ -12,6 +14,7 @@ from tqdm import tqdm
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+import config
 
 def clean_ipynb_folder_if_exists(folder):
     
@@ -28,26 +31,46 @@ def clean_ipynb_folder_if_exists(folder):
         print('No .ipynb_checkpoints to remove')
 
 
-def create_character_mapping():
-
-    character_map = {' ': 0}
-
-    for i in range(97, 123):
-        character_map[chr(i)] = len(character_map)
-
-    return character_map
-
+def create_token_index():
+    vocab_file = './vocab.txt'
+    lines = []
+    
+    #read vocab txt
+    with codecs.open(vocab_file, "r", "utf-8") as fin:
+        lines.extend(fin.readlines())
+    
+    token_to_index = {}
+    index_to_token = {}
+    index = 0
+    
+    for line in lines:
+        line = line[:-1]  # Strip the '\n' char.
+        if line.startswith("#"):
+            # Skip from reading comment line.
+            continue
+        token_to_index[line] = index
+        index_to_token[index] = line
+        index += 1
+    return token_to_index, index_to_token
 
 def label_idx(label):
     
-    char_2_idx = create_character_mapping() 
+    token_to_index, _ = create_token_index() 
     
-    label = ' '.join(re.split('[^a-z]', label.lower()[:-1])) #only take alpha and ignore /n at the end of a sentence
-    
-    vector = [char_2_idx[char] for char in label] #convert string to vector of index
-    
-    return vector
+    tokens = list(label.lower().strip())
 
+    #convert string to vector of index
+    labels = [token_to_index[char] for char in tokens] 
+    
+    return labels
+
+def idx_string(indices):
+    _, index_to_token = create_token_index()
+    
+    #create a string from indices
+    string = ''.join([index_to_token[index] for index in indices]) 
+    
+    return string
 
 def create_main_metadata(SRC, DST):
     clean_ipynb_folder_if_exists(SRC)
@@ -74,7 +97,6 @@ def create_main_metadata(SRC, DST):
                     with open(os.path.join(root, meta), 'r') as f:
 
                         for line in f.readlines():
-
 
                             name, label = line.split(' ', 1) 
                             path = os.path.join(root, name + '.flac')
@@ -117,12 +139,8 @@ def extract_features(file_path):
 
 class TFRecordsConverter:
     """Convert audio to TFRecords."""
-    def __init__(self, meta_path, output_dir, n_shards_train, n_shards_test,
-                 n_shards_val, test_size, val_size):
+    def __init__(self, meta_path, output_dir, test_size, val_size):
         self.output_dir = output_dir
-        self.n_shards_train = n_shards_train
-        self.n_shards_test = n_shards_test
-        self.n_shards_val = n_shards_val
 
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -135,10 +153,14 @@ class TFRecordsConverter:
         self.max_label_len = self.df.label_length.max()
         
         n_samples = len(df)
-        self.n_test = np.ceil(n_samples * test_size)
-        self.n_val = np.ceil(n_samples * val_size)
-        self.n_train = n_samples - self.n_test - self.n_val
-
+        self.n_test = int(np.ceil(n_samples * test_size))
+        self.n_val = int(np.ceil(n_samples * val_size))
+        self.n_train = int(n_samples - self.n_test - self.n_val)
+        
+        self.n_shards_train = int(max(1000, self.n_train) / 1000)
+        self.n_shards_test = int(max(1000, self.n_test) / 1000)
+        self.n_shards_val = int(max(1000, self.n_val) / 1000)
+        
     def _get_shard_path(self, split, shard_id, shard_size):
         return os.path.join(self.output_dir,
                             '{}-{:03d}-{}.tfrecord'.format(split, shard_id,
@@ -154,6 +176,7 @@ class TFRecordsConverter:
                 file_path = self.df.filepath.iloc[index]
                 
                 label = eval(self.df.label.iloc[index])
+                
                 if len(label) < self.max_label_len:
                     offset = self.max_label_len - len(label)
                     padding = [0 for _ in range(offset)]
@@ -161,7 +184,7 @@ class TFRecordsConverter:
                 
                 feature = extract_features(file_path)
                 feature = pad_sequences(feature, maxlen= self.max_input_len, padding = 'post')
-                
+                feature = feature.T
                 # Example contains two features: A FloatList for the decoded
                 # audio data and convert them to MFCC and an Int64List containing the corresponding
                 # label's index.
@@ -176,11 +199,12 @@ class TFRecordsConverter:
         Partition data into training, testing and validation sets. Then,
         divide each data set into the specified number of TFRecords shards.
         """
-        splits = ('train', 'test', 'validate')
+        splits = ('train', 'test', 'valid')
         split_sizes = (self.n_train, self.n_test, self.n_val)
         split_n_shards = (self.n_shards_train, self.n_shards_test,
                           self.n_shards_val)
-
+        
+        start_time = datetime.datetime.now()
         offset = 0
         for split, size, n_shards in zip(splits, split_sizes, split_n_shards):
             
@@ -189,8 +213,6 @@ class TFRecordsConverter:
             cumulative_size = offset + size
             
             for shard_id in tqdm(range(1, n_shards + 1)):
-                # print('Converting file {} of {}'.format(shard_id, split))
-                
                 step_size = min(shard_size, cumulative_size - offset)
                 shard_path = self._get_shard_path(split, shard_id, step_size)
                 
@@ -199,13 +221,21 @@ class TFRecordsConverter:
                 file_indices = np.arange(offset, offset + step_size)
                 self._write_tfrecord_file(shard_path, file_indices)
                 offset += step_size
-
+        
+        total_time = datetime.datetime.now() - start_time
+        
         data_info = "\n".join([
             'Number of training examples:       {}'.format(self.n_train),
             'Number of testing examples:        {}'.format(self.n_test),
             'Number of validation examples:     {}'.format(self.n_val),
-            'TFRecord files saved to            {}'.format(self.output_dir),
-            'Number of examples                 {}'.format(self.df.shape[0])
+            'TFRecord files saved to:           {}'.format(self.output_dir),
+            'Number of examples:                {}'.format(self.df.shape[0]),
+            'Max input length:                  {}'.format(self.max_input_len),
+            'Max label length:                  {}'.format(self.max_label_len),
+            'Total time for processing:         {}'.format(total_time),
+            'Number of shards for training:     {}'.format(self.n_shards_train),
+            'Number of shards for testing:      {}'.format(self.n_shards_test),
+            'Number of shards for valid:        {}'.format(self.n_shards_valid)
         ])
 
         ROOT = os.path.dirname(self.output_dir)
@@ -215,21 +245,13 @@ class TFRecordsConverter:
             print(data_info)
 
 
-def get_data_detail(meta):
-    result = {}
-    result['max_input_length'] = meta['spec_length'].max()
-    result['max_label_length'] = meta['label_length'].max()
-    result['num_samples'] = meta.shape[0]
-    return result
-
-
 #Each tf.train.Example record contains one or more "features", and the input pipeline typically converts these features into tensors.
 def _parse_batch(record_batch, training_config):
 
     # Create a description of the features
     feature_description = {
-        'feature': tf.io.FixedLenFeature([training_config['max_input_length'],40,1], tf.float32),
-        'label': tf.io.FixedLenFeature([training_config['max_label_length']], tf.int64),
+        'feature': tf.io.FixedLenFeature([training_config['max_input_length'],training_config['num_features']], tf.float32),
+        'label': tf.io.FixedLenFeature([training_config['max_label_length']], tf.int64)
     }
 
     # Parse the input `tf.Example` proto using the dictionary above
@@ -241,9 +263,9 @@ def _parse_batch(record_batch, training_config):
 def get_dataset_from_tfrecords(training_config, tfrecords_dir='tfrecords' , split='train', batch_size=64):
     
     AUTOTUNE = tf.data.experimental.AUTOTUNE
-
-    if split not in ('train', 'test', 'validate'):
-        raise ValueError("split must be either 'train', 'test' or 'validate'")
+    
+    if split not in ('train', 'test', 'valid'):
+        raise ValueError("split must be either 'train', 'test' or 'valid'")
     
     # List all *.tfrecord files for the selected split
     pattern = os.path.join(tfrecords_dir, '{}*.tfrecord'.format(split))
@@ -257,6 +279,7 @@ def get_dataset_from_tfrecords(training_config, tfrecords_dir='tfrecords' , spli
     # Read TFRecord files in an interleaved order
     ds = tf.data.TFRecordDataset(files_ds,
                                  compression_type='ZLIB')
+    
     # Prepare batches
     ds = ds.batch(batch_size)
 

@@ -6,3 +6,4 @@ logs/
 .ipynb_checkpoints/
 checkpoints/
 ./src/notebooks/.ipynb_checkpoints/
+Reference/
