@@ -18,12 +18,12 @@ if __name__ == "__main__":
                         type=str,
                         required=True, 
                         help="The name of folder containing preprocessed files")
-    parser.add_argument("--tfrecord",
-                        action="store_true",
-                        help='Convert audio file to TFrecords')
     parser.add_argument("--meta",
                         action="store_true",
                         help='Create metadata from raw folders')
+    parser.add_argument("--tfrecord",
+                        action="store_true",
+                        help='Convert audio file to TFrecords')
     parser.add_argument("--test-size",
                         type=str,
                         required=False,

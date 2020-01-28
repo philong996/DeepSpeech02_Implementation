@@ -3,6 +3,7 @@ import numpy as np
 import librosa
 import re
 
+import editdistance
 import datetime
 import codecs
 import csv
@@ -177,6 +178,7 @@ class TFRecordsConverter:
                 
                 label = eval(self.df.label.iloc[index])
                 
+
                 if len(label) < self.max_label_len:
                     offset = self.max_label_len - len(label)
                     padding = [0 for _ in range(offset)]
@@ -204,7 +206,21 @@ class TFRecordsConverter:
         split_n_shards = (self.n_shards_train, self.n_shards_test,
                           self.n_shards_val)
         
+        with open(os.path.join(os.path.dirname(self.output_dir), 'labels.csv'), 'w', newline='') as f:
+            labels_file = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            
+            labels_file.writerow(['labels', 'split'])
+            
+            for i in range(len(self.df)):
+                if i < self.n_train:
+                    labels_file.writerow([self.df.label.iloc[i], 'train'])
+                elif i < self.n_train + self.n_test:
+                    labels_file.writerow([self.df.label.iloc[i], 'test'])
+                else:
+                    labels_file.writerow([self.df.label.iloc[i], 'valid'])
+
         start_time = datetime.datetime.now()
+        
         offset = 0
         for split, size, n_shards in zip(splits, split_sizes, split_n_shards):
             
@@ -235,7 +251,7 @@ class TFRecordsConverter:
             'Total time for processing:         {}'.format(total_time),
             'Number of shards for training:     {}'.format(self.n_shards_train),
             'Number of shards for testing:      {}'.format(self.n_shards_test),
-            'Number of shards for valid:        {}'.format(self.n_shards_valid)
+            'Number of shards for valid:        {}'.format(self.n_shards_val)
         ])
 
         ROOT = os.path.dirname(self.output_dir)
@@ -289,3 +305,30 @@ def get_dataset_from_tfrecords(training_config, tfrecords_dir='tfrecords' , spli
     ds = ds.repeat()
 
     return ds.prefetch(buffer_size=AUTOTUNE)
+
+def calculate_metrics(predicts, ground_truth):
+    """Calculate Character Error Rate (CER), Word Error Rate (WER) and Sequence Error Rate (SER)"""
+
+    if len(predicts) == 0 or len(ground_truth) == 0:
+        return (1, 1, 1)
+
+    cer, wer, ser = [], [], []
+
+    for (pd, gt) in zip(predicts, ground_truth):
+        pd_cer, gt_cer = list(pd.lower()), list(gt.lower())
+        dist = editdistance.eval(pd_cer, gt_cer)
+        cer.append(dist / (max(len(pd_cer), len(gt_cer))))
+
+        pd_wer, gt_wer = pd.lower().split(), gt.lower().split()
+        dist = editdistance.eval(pd_wer, gt_wer)
+        wer.append(dist / (max(len(pd_wer), len(gt_wer))))
+
+        pd_ser, gt_ser = [pd], [gt]
+        dist = editdistance.eval(pd_ser, gt_ser)
+        ser.append(dist / (max(len(pd_ser), len(gt_ser))))
+
+    cer_f = sum(cer) / len(cer)
+    wer_f = sum(wer) / len(wer)
+    ser_f = sum(ser) / len(ser)
+
+    return (cer_f, wer_f, ser_f)

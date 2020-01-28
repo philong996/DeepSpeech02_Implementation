@@ -7,3 +7,4 @@ logs/
 checkpoints/
 ./src/notebooks/.ipynb_checkpoints/
 Reference/
+results/
