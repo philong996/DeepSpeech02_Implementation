@@ -111,7 +111,7 @@ if __name__ == "__main__":
                 write_images=False,
                 update_freq="epoch"),
             ModelCheckpoint(
-                filepath=checkpoint_path',
+                filepath=checkpoint_path,
                 monitor='val_loss',
                 save_best_only=True,
                 save_weights_only=True,

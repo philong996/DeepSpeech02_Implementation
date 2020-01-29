@@ -158,9 +158,9 @@ class TFRecordsConverter:
         self.n_val = int(np.ceil(n_samples * val_size))
         self.n_train = int(n_samples - self.n_test - self.n_val)
         
-        self.n_shards_train = int(max(1000, self.n_train) / 1000)
-        self.n_shards_test = int(max(1000, self.n_test) / 1000)
-        self.n_shards_val = int(max(1000, self.n_val) / 1000)
+        self.n_shards_train = int(np.ceil(max(1000, self.n_train) / 1000))
+        self.n_shards_test = int(np.ceil(max(1000, self.n_test) / 1000))
+        self.n_shards_val = int(np.ceil(max(1000, self.n_val) / 1000))
         
     def _get_shard_path(self, split, shard_id, shard_size):
         return os.path.join(self.output_dir,
