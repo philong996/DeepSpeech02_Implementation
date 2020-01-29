@@ -25,21 +25,23 @@ def ctc_loss_lambda_func(y_true, y_pred):
     return loss
 
 
-def rnn_model(input_size, units, activation = 'relu', output_dim=29, learning_rate=3e-4):
+def rnn_model(input_size, units, layers, activation = 'relu', output_dim=29, learning_rate=3e-4):
     """ Build a recurrent network for speech 
     """
     # Main acoustic input
     input_data = Input(name='the_input', shape=(input_size[0], input_size[1]))
-    
-    # Add recurrent layer
-    simp_rnn = GRU(units, activation=activation,
-        return_sequences=True, name='rnn')(input_data)
-    
-    #Add batch normalization 
-    bn_rnn = BatchNormalization()(simp_rnn)
+    x = input_data
+
+    for i in range(layers):
+        # Add recurrent layer
+        x = GRU(units, activation=activation,
+            return_sequences=True, name='rnn_{}'.format(i))(x)
+        
+        #Add batch normalization 
+        x = BatchNormalization()(x)
     
     #Add a TimeDistributed(Dense(output_dim)) layer
-    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn)
+    time_dense = TimeDistributed(Dense(output_dim))(x)
     
     #Add softmax activation layer
     y_pred = Activation('softmax', name='softmax')(time_dense)
@@ -54,3 +56,4 @@ def rnn_model(input_size, units, activation = 'relu', output_dim=29, learning_ra
     model.summary()
     
     return model
+

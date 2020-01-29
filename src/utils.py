@@ -276,10 +276,19 @@ def _parse_batch(record_batch, training_config):
     return example['feature'], example['label']
 
 
-def get_dataset_from_tfrecords(training_config, tfrecords_dir='tfrecords' , split='train', batch_size=64):
+def get_dataset_from_tfrecords(training_config, tfrecords_dir , split='train', batch_size=32):
     
     AUTOTUNE = tf.data.experimental.AUTOTUNE
     
+    #take labels
+    ROOT = os.path.dirname(tfrecords_dir)
+    label_file = os.path.join(ROOT, 'labels.csv')
+    df_labels = pd.read_csv(label_file)
+
+    labels = df_labels['labels'][df_labels['split'] == split].to_list()
+    labels = [idx_string(eval(label)) for label in labels]
+
+
     if split not in ('train', 'test', 'valid'):
         raise ValueError("split must be either 'train', 'test' or 'valid'")
     
@@ -304,7 +313,7 @@ def get_dataset_from_tfrecords(training_config, tfrecords_dir='tfrecords' , spli
 
     ds = ds.repeat()
 
-    return ds.prefetch(buffer_size=AUTOTUNE)
+    return ds.prefetch(buffer_size=AUTOTUNE), labels
 
 def calculate_metrics(predicts, ground_truth):
     """Calculate Character Error Rate (CER), Word Error Rate (WER) and Sequence Error Rate (SER)"""

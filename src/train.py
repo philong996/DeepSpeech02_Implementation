@@ -14,28 +14,18 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint  
 from tensorflow.keras import backend as K
 
-if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser()
+from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-    parser.add_argument("--train", action="store_true", default=False)
-    parser.add_argument("--test", action="store_true", default=False)
-    parser.add_argument("--data", type=str, required=False, help='Name of data folder')
-    parser.add_argument("--model", type=str, required=True, help='Name of the model to save')
-    parser.add_argument("--units", type=int, required=False, default=200 , help='number of the units of RNN')
-    
-    args = parser.parse_args()
 
-    # make chackpoints directory, if necessary
-    if not os.path.exists('../checkpoints'):
-        os.makedirs('../checkpoints')
 
-    checkpoint_path = os.path.join('../checkpoints', args.model + '.h5')
-
+def get_data_detail(folder_name):
+    ''' Get the information of data from metadata.csv
+    '''
     ROOT = '../data'
-    meta = pd.read_csv(os.path.join(ROOT, args.data ,'metadata.csv'), index_col = 'index')
+    meta = pd.read_csv(os.path.join(ROOT, folder_name ,'metadata.csv'), index_col = 'index')
 
-    data_file = os.path.join(ROOT, args.data, 'data_info.txt')
+    data_file = os.path.join(ROOT, folder_name, 'data_info.txt')
     with codecs.open(data_file , 'r') as f:
         lines = f.readlines()
 
@@ -49,8 +39,54 @@ if __name__ == "__main__":
         'num_features' : 40,
         'num_label' : 29
     }
+    return data_detail
 
-    model = speech_models.rnn_model(input_size = (data_detail['max_input_length'], data_detail['num_features']), units = args.units)
+
+def decode_predictions(predictions, MAX_LABEL_LENGTH):
+    '''Decode a prediction using tf.ctc_decode for the highest probable character at each
+        timestep. Then, simply convert the integer sequence to text
+    '''
+    x_test = np.array(predictions)
+    x_test_len = [MAX_LABEL_LENGTH for _ in range(len(x_test))]
+    decode, log = K.ctc_decode(x_test,
+                            x_test_len,
+                            greedy=True,
+                            beam_width=10,
+                            top_paths=1)
+
+    probabilities = [np.exp(x) for x in log]
+    predicts = [[[int(p) for p in x if p != -1] for x in y] for y in decode]
+    predicts = np.swapaxes(predicts, 0, 1)
+    
+    predicts = [utils.idx_string(label[0]) for label in predicts]
+
+    return predicts
+
+
+
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--train", action="store_true", default=False)
+    parser.add_argument("--test", action="store_true", default=False)
+    parser.add_argument("--data", type=str, required=False, help='Name of data folder')
+    parser.add_argument("--model", type=str, required=True, help='Name of the model to save')
+    parser.add_argument("--units", type=int, required=False, default=200 , help='number of the units of RNN')
+    parser.add_argument("--layers", type=int, required=False, default=2 , help='number of the units of RNN')
+    
+
+    args = parser.parse_args()
+
+    # make chackpoints directory, if necessary
+    if not os.path.exists('../checkpoints'):
+        os.makedirs('../checkpoints')
+
+    checkpoint_path = os.path.join('../checkpoints', args.model + '.h5')
+
+    data_detail = get_data_detail(args.data)
+
+    model = speech_models.rnn_model(input_size = (data_detail['max_input_length'], data_detail['num_features']), units = args.units, layers = args.layers)
 
     if args.train:
 
@@ -58,18 +94,44 @@ if __name__ == "__main__":
         TRAIN_STEPS = int(data_detail['n_training'] / config.training['batch_size'])
         VALID_STEPS = int(data_detail['n_valid'] / config.training['batch_size'])
         
-        train_ds = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='train', batch_size=config.training['batch_size'])
-        valid_ds = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='valid', batch_size=config.training['batch_size'])
+        train_ds, train_labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='train', batch_size=config.training['batch_size'])
+        valid_ds, valid_labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='valid', batch_size=config.training['batch_size'])
 
         #load weight to continue training
         if os.path.isfile(checkpoint_path):
             model.load_weights(checkpoint_path)
         
-        # add checkpointer
-        checkpointer = ModelCheckpoint(filepath=checkpoint_path, verbose=0) 
+        # add callbacks
+        callbacks = [
+            TensorBoard(
+                log_dir='./logs',
+                histogram_freq=10,
+                profile_batch=0,
+                write_graph=True,
+                write_images=False,
+                update_freq="epoch"),
+            ModelCheckpoint(
+                filepath=checkpoint_path',
+                monitor='val_loss',
+                save_best_only=True,
+                save_weights_only=True,
+                verbose=1),
+            EarlyStopping(
+                monitor='val_loss',
+                min_delta=1e-8,
+                patience=15,
+                restore_best_weights=True,
+                verbose=1),
+            ReduceLROnPlateau(
+                monitor='val_loss',
+                min_delta=1e-8,
+                factor=0.2,
+                patience=10,
+                verbose=1)
+        ]
 
         #train model
-        history = model.fit(train_ds, epochs = config.training['epochs'], validation_data = valid_ds, validation_steps = VALID_STEPS , steps_per_epoch = TRAIN_STEPS, callbacks= [checkpointer])
+        history = model.fit(train_ds, epochs = config.training['epochs'], validation_data = valid_ds, validation_steps = VALID_STEPS , steps_per_epoch = TRAIN_STEPS, callbacks= callbacks)
 
         #save the result to compare models after training
         pickle_path = os.path.join('../checkpoints', args.model + '.pickle')
@@ -80,8 +142,7 @@ if __name__ == "__main__":
 
         #prepare for testing data
         TEST_STEPS = int(data_detail['n_test'] / config.training['batch_size'])
-
-        test_ds = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='test', batch_size=config.training['batch_size'])
+        test_ds, labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='test', batch_size=config.training['batch_size'])
 
         #load model weights
         checkpoint_path = os.path.join('../checkpoints', args.model + '.h5')
@@ -98,32 +159,12 @@ if __name__ == "__main__":
         total_time = datetime.datetime.now() - start_time
 
         #decode predictions and save to txt file
-        MAX_LABEL_LENGTH = data_detail['max_label_length']
-
-        x_test = np.array(predictions)
-        x_test_len = [MAX_LABEL_LENGTH for _ in range(len(x_test))]
-        decode, log = K.ctc_decode(x_test,
-                                x_test_len,
-                                greedy=True,
-                                beam_width=10,
-                                top_paths=1)
+        predicts = decode_predictions(predictions, data_detail['max_label_length'])
         
-        #take labels
-        label_file = os.path.join(ROOT, args.data, 'labels.csv')
-        df_labels = pd.read_csv(label_file)
-
-        labels = df_labels['labels'][df_labels['split'] == 'test'].to_list()
-        labels = [utils.idx_string(eval(label)) for label in labels]
-
-        probabilities = [np.exp(x) for x in log]
-        predicts = [[[int(p) for p in x if p != -1] for x in y] for y in decode]
-        predicts = np.swapaxes(predicts, 0, 1)
-        
-        predicts = [utils.idx_string(label[0]) for label in predicts]
-
         if not os.path.exists('../results/'):
             os.makedirs('../results/')
         
+        #save result to prediction file
         prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model))
         with open(prediction_file, "w") as f:
             for pd, gt in zip(predicts, labels):
