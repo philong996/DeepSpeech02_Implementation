@@ -50,7 +50,7 @@ if __name__ == "__main__":
         print('INFO: Preprocessing Audios, Save to TFrecords')
         converter = utils.TFRecordsConverter(meta_path = os.path.join(DST,'metadata.csv'), 
                     output_dir = os.path.join(DST,'TFrecords'), 
-                    test_size = args.test_size, 
-                    val_size = args.valid_size)
+                    test_size = float(args.test_size), 
+                    val_size = float(args.valid_size))
 
         converter.convert()
