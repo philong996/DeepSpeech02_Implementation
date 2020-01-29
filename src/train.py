@@ -2,7 +2,7 @@ import datetime
 import os
 import codecs
 import argparse
-import _pickle as pickle
+import pickle
 
 import speech_models
 import config
