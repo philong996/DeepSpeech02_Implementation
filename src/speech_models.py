@@ -76,14 +76,14 @@ def deep_speech(input_size, units, rnn_layers, is_bi, activation = 'relu', outpu
     x = input_data
     
     padding = (20, 5)
-    x = cnn = Conv2D(filters=32, 
+    x = Conv2D(filters=32, 
                      kernel_size=(41,11), 
                      strides=(2,2), 
                      padding=[[0, 0], [padding[0], padding[0]], [padding[1], padding[1]], [0, 0]])(x)
     x = BatchNormalization()(x)
     
     padding = (10, 5)
-    x = cnn = Conv2D(filters=32, 
+    x = Conv2D(filters=32, 
                      kernel_size=(21,11), 
                      strides=(2,1), 
                      padding=[[0, 0], [padding[0], padding[0]], [padding[1], padding[1]], [0, 0]])(x)
