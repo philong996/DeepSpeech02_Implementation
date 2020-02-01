@@ -72,8 +72,8 @@ def deep_speech(input_size, units, rnn_layers, is_bi, activation = 'relu', outpu
     """
     
     # Main acoustic input
-    input_data = Input(name='the_input', shape=(input_size[0], input_size[1], 1))
-    x = input_data
+    input_data = Input(name='the_input', shape=(input_size[0], input_size[1]))
+    x = Reshape((input_size[0], input_size[1],1))(input_data)
     
     padding = (20, 5)
     x = Conv2D(filters=32, 
