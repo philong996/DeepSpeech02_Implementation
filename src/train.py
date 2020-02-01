@@ -14,8 +14,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint  
 from tensorflow.keras import backend as K
 
-from tensorflow.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 
 
@@ -70,11 +69,16 @@ if __name__ == "__main__":
 
     parser.add_argument("--train", action="store_true", default=False)
     parser.add_argument("--test", action="store_true", default=False)
-    parser.add_argument("--data", type=str, required=False, help='Name of data folder')
-    parser.add_argument("--model", type=str, required=True, help='Name of the model to save')
+    parser.add_argument("--is-bi", action="store_true", default=False, help="Whether use BiLSTM")
     parser.add_argument("--units", type=int, required=False, default=200 , help='number of the units of RNN')
-    parser.add_argument("--layers", type=int, required=False, default=2 , help='number of the units of RNN')
+    parser.add_argument("--crnn", action="store_true", default=False)
+    parser.add_argument("--rnn-layers", type=int, required=False, default=3 , help='number of layers of RNN')
+    parser.add_argument("--cnn-layers", type=int, required=False, default=2 , help='number of layers of CNN')    
+    parser.add_argument("--epochs", type=int, default = config.training['epochs'])
+    parser.add_argument("--data", type=str, required=False, help='Name of data folder')
+    parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
     
+
 
     args = parser.parse_args()
 
@@ -82,11 +86,22 @@ if __name__ == "__main__":
     if not os.path.exists('../checkpoints'):
         os.makedirs('../checkpoints')
 
-    checkpoint_path = os.path.join('../checkpoints', args.model + '.h5')
+    checkpoint_path = os.path.join('../checkpoints', args.model_name + '.h5')
 
     data_detail = get_data_detail(args.data)
 
-    model = speech_models.rnn_model(input_size = (data_detail['max_input_length'], data_detail['num_features']), units = args.units, layers = args.layers)
+    if args.crnn:
+        pass
+        model = speech_models.c_rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
+                                    units = args.units, 
+                                    cnn_layers = args.cnn_layers, 
+                                    rnn_layers = args.rnn_layers, 
+                                    is_bi = args.is_bi)
+    else:
+        model = speech_models.rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
+                                        is_bi = args.is_bi, 
+                                        units = args.units, 
+                                        layers = args.rnn_layers)
 
     if args.train:
 
@@ -94,8 +109,14 @@ if __name__ == "__main__":
         TRAIN_STEPS = int(data_detail['n_training'] / config.training['batch_size'])
         VALID_STEPS = int(data_detail['n_valid'] / config.training['batch_size'])
         
-        train_ds, train_labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='train', batch_size=config.training['batch_size'])
-        valid_ds, valid_labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='valid', batch_size=config.training['batch_size'])
+        train_ds, train_labels = utils.get_dataset_from_tfrecords(data_detail,
+                                                                 tfrecords_dir=data_detail['data_folder'], 
+                                                                 split='train', 
+                                                                 batch_size=config.training['batch_size'])
+        valid_ds, valid_labels = utils.get_dataset_from_tfrecords(data_detail,
+                                                                tfrecords_dir=data_detail['data_folder'], 
+                                                                split='valid', 
+                                                                batch_size=config.training['batch_size'])
 
         #load weight to continue training
         if os.path.isfile(checkpoint_path):
@@ -103,13 +124,6 @@ if __name__ == "__main__":
         
         # add callbacks
         callbacks = [
-            TensorBoard(
-                log_dir='./logs',
-                histogram_freq=10,
-                profile_batch=0,
-                write_graph=True,
-                write_images=False,
-                update_freq="epoch"),
             ModelCheckpoint(
                 filepath=checkpoint_path,
                 monitor='val_loss',
@@ -131,10 +145,15 @@ if __name__ == "__main__":
         ]
 
         #train model
-        history = model.fit(train_ds, epochs = config.training['epochs'], validation_data = valid_ds, validation_steps = VALID_STEPS , steps_per_epoch = TRAIN_STEPS, callbacks= callbacks)
+        history = model.fit(train_ds, 
+                            epochs = args.epochs, 
+                            validation_data = valid_ds, 
+                            validation_steps = VALID_STEPS , 
+                            steps_per_epoch = TRAIN_STEPS, 
+                            callbacks= callbacks)
 
         #save the result to compare models after training
-        pickle_path = os.path.join('../checkpoints', args.model + '.pickle')
+        pickle_path = os.path.join('../checkpoints', args.model_name + '.pickle')
         with open(pickle_path, 'wb') as f:
             pickle.dump(history.history, f)
 
@@ -142,10 +161,13 @@ if __name__ == "__main__":
 
         #prepare for testing data
         TEST_STEPS = int(data_detail['n_test'] / config.training['batch_size'])
-        test_ds, labels = utils.get_dataset_from_tfrecords(data_detail, tfrecords_dir=data_detail['data_folder'], split='test', batch_size=config.training['batch_size'])
+        test_ds, labels = utils.get_dataset_from_tfrecords(data_detail, 
+                                                        tfrecords_dir=data_detail['data_folder'], 
+                                                        split='test', 
+                                                        batch_size=config.training['batch_size'])
 
         #load model weights
-        checkpoint_path = os.path.join('../checkpoints', args.model + '.h5')
+        checkpoint_path = os.path.join('../checkpoints', args.model_name + '.h5')
         try:
             model.load_weights(checkpoint_path)
         except:
@@ -165,7 +187,7 @@ if __name__ == "__main__":
             os.makedirs('../results/')
         
         #save result to prediction file
-        prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model))
+        prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name))
         with open(prediction_file, "w") as f:
             for pd, gt in zip(predicts, labels):
                 f.write("Y {}\nP {}\n\n".format(gt, pd))
@@ -183,7 +205,7 @@ if __name__ == "__main__":
             "Sequence Error Rate:  {}".format(evaluate[2]),
         ])
         
-        evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model))
+        evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model_name))
         with open(evaluate_file, "w") as ev_f:
             ev_f.write(e_corpus)
             print(e_corpus)

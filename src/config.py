@@ -5,6 +5,14 @@ preprocess = {
 }
 
 training = {    
-    'epochs' : 25,
-    'batch_size' : 32}
+    'epochs' : 100,
+    'batch_size' : 32
+}
 
+
+# TO-DO
+# deepspeech_arch = {
+#     'cnn_layers' :  ,
+#     'rnn_layers' :  ,
+    
+# }
