@@ -13,7 +13,6 @@ training = {
 
 model_architecture = {
     'rnn_layers' :  3,
-    'cnn_layers' :  2,
-    'units_rnn': 200,
+    'units_rnn': 256,
     'is_bi': True,
 }
