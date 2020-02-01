@@ -77,11 +77,11 @@ def c_rnn(input_size, units, cnn_layers, rnn_layers, is_bi, activation = 'relu',
 
     for cnn in range(cnn_layers):
         # Add convolutional layer 1D
-        x = Conv1D(filters= 128, kernel_size=3, 
+        x = Conv1D(filters= (128 * (cnn+1)), kernel_size=3, 
                     strides=2, 
                     padding='same',
                     activation='relu',
-                    name='conv1d{}'.format(cnn))(x)
+                    name='conv1d{}'.format(cnn+1))(x)
     
     # Add batch normalization
     x = BatchNormalization(name='bn_conv_1d')(x)
