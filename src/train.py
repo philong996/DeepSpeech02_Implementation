@@ -88,7 +88,6 @@ if __name__ == "__main__":
         pass
         model = speech_models.deep_speech(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                     units = config.model_architecture['units_rnn'], 
-                                    cnn_layers = config.model_architecture['cnn_layers'], 
                                     rnn_layers = config.model_architecture['rnn_layers'], 
                                     is_bi = config.model_architecture['is_bi'])
     else:
