@@ -10,9 +10,10 @@ training = {
 }
 
 
-# TO-DO
-# deepspeech_arch = {
-#     'cnn_layers' :  ,
-#     'rnn_layers' :  ,
-    
-# }
+
+model_architecture = {
+    'rnn_layers' :  1,
+    'cnn_layers' :  2,
+    'units_rnn': 200,
+    'is_bi': True,
+}

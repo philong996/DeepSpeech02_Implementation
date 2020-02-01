@@ -36,7 +36,7 @@ def rnn(input_size, units, layers, is_bi, activation = 'relu', output_dim=29, le
     if is_bi:
         for i in range(layers):
             # Add recurrent layer
-            x = Bidirectional(LSTM(units, activation=activation,
+            x = Bidirectional(GRU(units, activation=activation,
                 return_sequences=True, name='rnn_{}'.format(i+1)))(x)
             
             #Add batch normalization 

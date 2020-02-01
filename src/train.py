@@ -69,16 +69,10 @@ if __name__ == "__main__":
 
     parser.add_argument("--train", action="store_true", default=False)
     parser.add_argument("--test", action="store_true", default=False)
-    parser.add_argument("--is-bi", action="store_true", default=False, help="Whether use BiLSTM")
-    parser.add_argument("--units", type=int, required=False, default=200 , help='number of the units of RNN')
     parser.add_argument("--crnn", action="store_true", default=False)
-    parser.add_argument("--rnn-layers", type=int, required=False, default=3 , help='number of layers of RNN')
-    parser.add_argument("--cnn-layers", type=int, required=False, default=2 , help='number of layers of CNN')    
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
     parser.add_argument("--data", type=str, required=False, help='Name of data folder')
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
-    
-
 
     args = parser.parse_args()
 
@@ -93,15 +87,15 @@ if __name__ == "__main__":
     if args.crnn:
         pass
         model = speech_models.c_rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
-                                    units = args.units, 
-                                    cnn_layers = args.cnn_layers, 
-                                    rnn_layers = args.rnn_layers, 
-                                    is_bi = args.is_bi)
+                                    units = config.model_architecture['units_rnn'], 
+                                    cnn_layers = config.model_architecture['cnn_layers'], 
+                                    rnn_layers = config.model_architecture['rnn_layers'], 
+                                    is_bi = config.model_architecture['is_bi'])
     else:
         model = speech_models.rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
-                                        is_bi = args.is_bi, 
-                                        units = args.units, 
-                                        layers = args.rnn_layers)
+                                        is_bi = config.model_architecture['is_bi'], 
+                                        units = config.model_architecture['units_rnn'], 
+                                        layers = config.model_architecture['rnn_layers'])
 
     if args.train:
 
