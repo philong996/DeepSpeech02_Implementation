@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import librosa
 import re
-
+import soundfile
 import editdistance
 import datetime
 import codecs
@@ -102,7 +102,8 @@ def create_main_metadata(SRC, DST):
                             name, label = line.split(' ', 1) 
                             path = os.path.join(root, name + '.flac')
                             
-                            spec_length = extract_features(path).shape[1]
+                            au, sr = soundfile.read(path)
+                            spec_length = compute_spectrogram_feature(au, sr).shape[0]
                             label = label_idx(label)
                             
                             metadata_writer.writerow({
@@ -126,7 +127,51 @@ def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
 
 
-def extract_features(file_path):
+def compute_spectrogram_feature(samples, sample_rate, stride_ms=10.0,
+                                window_ms=20.0, max_freq=None, eps=1e-14):
+    """Compute the spectrograms for the input samples(waveforms).
+    the code is from tensorflow research
+    """
+    if max_freq is None:
+        max_freq = sample_rate / 2
+    if max_freq > sample_rate / 2:
+        raise ValueError("max_freq must not be greater than half of sample rate.")
+
+    if stride_ms > window_ms:
+        raise ValueError("Stride size must not be greater than window size.")
+
+    stride_size = int(0.001 * sample_rate * stride_ms)
+    window_size = int(0.001 * sample_rate * window_ms)
+
+    # Extract strided windows
+    truncate_size = (len(samples) - window_size) % stride_size
+    samples = samples[:len(samples) - truncate_size]
+    nshape = (window_size, (len(samples) - window_size) // stride_size + 1)
+    nstrides = (samples.strides[0], samples.strides[0] * stride_size)
+    windows = np.lib.stride_tricks.as_strided(
+      samples, shape=nshape, strides=nstrides)
+    assert np.all(
+      windows[:, 1] == samples[stride_size:(stride_size + window_size)])
+
+    # Window weighting, squared Fast Fourier Transform (fft), scaling
+    weighting = np.hanning(window_size)[:, None]
+    fft = np.fft.rfft(windows * weighting, axis=0)
+    fft = np.absolute(fft)
+    fft = fft**2
+    scale = np.sum(weighting**2) * sample_rate
+    fft[1:-1, :] *= (2.0 / scale)
+    fft[(0, -1), :] /= scale
+    # Prepare fft frequency list
+    freqs = float(sample_rate) / window_size * np.arange(fft.shape[0])
+
+    # Compute spectrogram feature
+    ind = np.where(freqs <= max_freq)[0][-1] + 1
+    specgram = np.log(fft[:ind, :] + eps)
+    return np.transpose(specgram, (1, 0))
+
+
+
+def mfcc_feature(file_path):
     try:
         audio, sample_rate = librosa.load(file_path) 
         mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=40)
@@ -184,9 +229,11 @@ class TFRecordsConverter:
                     padding = [0 for _ in range(offset)]
                     label = label + padding
                 
-                feature = extract_features(file_path)
-                feature = pad_sequences(feature, maxlen= self.max_input_len, padding = 'post')
+                au, sr = soundfile.read(file_path)
+                feature = compute_spectrogram_feature(au, sr)
+                feature = pad_sequences(feature.T, maxlen= self.max_input_len, padding = 'post')
                 feature = feature.T
+
                 # Example contains two features: A FloatList for the decoded
                 # audio data and convert them to MFCC and an Int64List containing the corresponding
                 # label's index.

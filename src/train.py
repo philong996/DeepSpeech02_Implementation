@@ -35,7 +35,7 @@ def get_data_detail(folder_name):
         'max_label_length': int(lines[6].split(':')[-1]),
         'max_input_length': int(lines[5].split(':')[-1]),
         'data_folder' : lines[3].split(':')[-1].strip(),
-        'num_features' : 40,
+        'num_features' : 161,
         'num_label' : 29
     }
     return data_detail
