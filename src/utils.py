@@ -170,6 +170,19 @@ def compute_spectrogram_feature(samples, sample_rate, stride_ms=10.0,
     return np.transpose(specgram, (1, 0))
 
 
+def normalize_audio_feature(audio_feature):
+  """Perform mean and variance normalization on the spectrogram feature.
+  Args:
+    audio_feature: a numpy array for the spectrogram feature.
+  Returns:
+    a numpy array of the normalized spectrogram.
+  """
+  mean = np.mean(audio_feature, axis=0)
+  var = np.var(audio_feature, axis=0)
+  normalized = (audio_feature - mean) / (np.sqrt(var) + 1e-6)
+
+  return normalized
+
 
 def mfcc_feature(file_path):
     try:
@@ -231,6 +244,7 @@ class TFRecordsConverter:
                 
                 au, sr = soundfile.read(file_path)
                 feature = compute_spectrogram_feature(au, sr)
+                feature = normalize_audio_feature(feature)
                 feature = pad_sequences(feature.T, maxlen= self.max_input_len, padding = 'post')
                 feature = feature.T
 
