@@ -67,7 +67,7 @@ def rnn(input_size, units, layers, is_bi, activation = 'relu', output_dim=29, le
     return model
 
 
-def deep_speech(input_size, units, rnn_layers, is_bi, activation = 'relu', output_dim=29, learning_rate=3e-4):
+def deep_speech(input_size, units, rnn_layers, is_bi, activation = 'relu', output_dim=29, learning_rate=3e-3):
     """ Build a recurrent + convolutional network for speech 
     """
     

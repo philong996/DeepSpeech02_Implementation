@@ -1,4 +1,3 @@
-
 preprocess = {
     'test_size': 0.2,
     'valid_size': 0.2,
@@ -9,10 +8,8 @@ training = {
     'batch_size' : 32
 }
 
-
-
 model_architecture = {
     'rnn_layers' :  3,
-    'units_rnn': 256,
-    'is_bi': True,
+    'units_rnn': 1280,
+    'is_bi': False,
 }
