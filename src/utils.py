@@ -379,6 +379,7 @@ def get_dataset_from_tfrecords(training_config, tfrecords_dir , split='train', b
 
     return ds.prefetch(buffer_size=AUTOTUNE), labels
 
+
 def calculate_metrics(predicts, ground_truth):
     """Calculate Character Error Rate (CER), Word Error Rate (WER) and Sequence Error Rate (SER)"""
 
@@ -405,6 +406,7 @@ def calculate_metrics(predicts, ground_truth):
     ser_f = sum(ser) / len(ser)
 
     return (cer_f, wer_f, ser_f)
+
 
 def plot_stats(training_stats, val_stats, x_label='Training Steps', stats='loss'):
     stats, x_label = stats.title(), x_label.title()

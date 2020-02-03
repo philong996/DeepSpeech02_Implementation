@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--train-folder", type=str, required=True)
-    parser.add_argument("--test-folder", type=str, required=True)
+    parser.add_argument("--test-folder", default=None , type=str, required=False)
     parser.add_argument("--crnn", action="store_true", default=False)
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     data_detail = get_data_detail(args.train_folder)
 
     if args.crnn:
+        pass
         model = speech_models.deep_speech(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                     units = config.model_architecture['units_rnn'], 
                                     rnn_layers = config.model_architecture['rnn_layers'], 
@@ -132,11 +133,11 @@ if __name__ == "__main__":
                 min_delta=1e-8,
                 factor=0.2,
                 patience=10,
-                verbose=1),
-            # batch_stats_callback
+                verbose=1)
         ]
 
         #train model
+
         history = model.fit(train_ds, 
                             epochs = args.epochs, 
                             validation_data = valid_ds, 
