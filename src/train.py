@@ -19,10 +19,9 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 
 
 def get_data_detail(folder_name):
-    ''' Get the information of data from metadata.csv
+    ''' Get the information of data from data_info.txt
     '''
     ROOT = '../data'
-    meta = pd.read_csv(os.path.join(ROOT, folder_name ,'metadata.csv'), index_col = 'index')
 
     data_file = os.path.join(ROOT, folder_name, 'data_info.txt')
     with codecs.open(data_file , 'r') as f:
@@ -53,7 +52,7 @@ def decode_predictions(predictions, MAX_LABEL_LENGTH):
                             beam_width=10,
                             top_paths=1)
 
-    probabilities = [np.exp(x) for x in log]
+    #probabilities = [np.exp(x) for x in log]
     predicts = [[[int(p) for p in x if p != -1] for x in y] for y in decode]
     predicts = np.swapaxes(predicts, 0, 1)
     
@@ -67,11 +66,10 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--train", action="store_true", default=False)
-    parser.add_argument("--test", action="store_true", default=False)
+    parser.add_argument("--train-folder", type=str, required=True)
+    parser.add_argument("--test-folder", type=str, required=True)
     parser.add_argument("--crnn", action="store_true", default=False)
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
-    parser.add_argument("--data", type=str, required=False, help='Name of data folder')
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
 
     args = parser.parse_args()
@@ -82,10 +80,9 @@ if __name__ == "__main__":
 
     checkpoint_path = os.path.join('../checkpoints', args.model_name + '.h5')
 
-    data_detail = get_data_detail(args.data)
+    data_detail = get_data_detail(args.train_folder)
 
     if args.crnn:
-        pass
         model = speech_models.deep_speech(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                     units = config.model_architecture['units_rnn'], 
                                     rnn_layers = config.model_architecture['rnn_layers'], 
@@ -96,7 +93,7 @@ if __name__ == "__main__":
                                         units = config.model_architecture['units_rnn'], 
                                         layers = config.model_architecture['rnn_layers'])
 
-    if args.train:
+    if args.train_folder:
 
         #prepare for training data
         TRAIN_STEPS = int(data_detail['n_training'] / config.training['batch_size'])
@@ -116,6 +113,7 @@ if __name__ == "__main__":
             model.load_weights(checkpoint_path)
         
         # add callbacks
+        batch_stats_callback = speech_models.CollectBatchStats()
         callbacks = [
             ModelCheckpoint(
                 filepath=checkpoint_path,
@@ -134,7 +132,8 @@ if __name__ == "__main__":
                 min_delta=1e-8,
                 factor=0.2,
                 patience=10,
-                verbose=1)
+                verbose=1),
+            batch_stats_callback
         ]
 
         #train model
@@ -145,17 +144,24 @@ if __name__ == "__main__":
                             steps_per_epoch = TRAIN_STEPS, 
                             callbacks= callbacks)
 
+        loss = {'loss' : batch_stats_callback.batch_losses, 
+        'val_loss' : batch_stats_callback.batch_val_losses}
+
         #save the result to compare models after training
         pickle_path = os.path.join('../checkpoints', args.model_name + '.pickle')
         with open(pickle_path, 'wb') as f:
-            pickle.dump(history.history, f)
+            pickle.dump(loss, f)
 
-    if args.test:
+    if args.test_folder:
+        
+        #get test data detail
+        test_detail = get_data_detail(args.test_folder)
 
         #prepare for testing data
-        TEST_STEPS = int(data_detail['n_test'] / config.training['batch_size'])
-        test_ds, labels = utils.get_dataset_from_tfrecords(data_detail, 
-                                                        tfrecords_dir=data_detail['data_folder'], 
+        TEST_STEPS = int(test_detail['n_test'] / config.training['batch_size'])
+        
+        test_ds, labels = utils.get_dataset_from_tfrecords(test_detail, 
+                                                        tfrecords_dir=test_detail['data_folder'], 
                                                         split='test', 
                                                         batch_size=config.training['batch_size'])
 
@@ -174,7 +180,7 @@ if __name__ == "__main__":
         total_time = datetime.datetime.now() - start_time
 
         #decode predictions and save to txt file
-        predicts = decode_predictions(predictions, data_detail['max_label_length'])
+        predicts = decode_predictions(predictions, test_detail['max_label_length'])
         
         if not os.path.exists('../results/'):
             os.makedirs('../results/')

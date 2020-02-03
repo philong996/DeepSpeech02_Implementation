@@ -46,7 +46,6 @@ if __name__ == "__main__":
         utils.create_main_metadata(SRC, DST) 
 
     if args.tfrecord:
-        
         print('INFO: Preprocessing Audios, Save to TFrecords')
         converter = utils.TFRecordsConverter(meta_path = os.path.join(DST,'metadata.csv'), 
                     output_dir = os.path.join(DST,'TFrecords'), 

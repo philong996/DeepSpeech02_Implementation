@@ -285,6 +285,9 @@ class TFRecordsConverter:
         offset = 0
         for split, size, n_shards in zip(splits, split_sizes, split_n_shards):
             
+            if size == 0:
+                continue
+            
             print('Converting {} set into TFRecord shards...'.format(split))
             shard_size = np.ceil(size / n_shards)
             cumulative_size = offset + size
@@ -402,3 +405,18 @@ def calculate_metrics(predicts, ground_truth):
     ser_f = sum(ser) / len(ser)
 
     return (cer_f, wer_f, ser_f)
+
+def plot_stats(training_stats, val_stats, x_label='Training Steps', stats='loss'):
+    stats, x_label = stats.title(), x_label.title()
+    legend_loc = 'upper right' if stats=='loss' else 'lower right'
+    training_steps = len(training_stats)
+    test_steps = len(val_stats)
+
+    plt.figure()
+    plt.ylabel(stats)
+    plt.xlabel(x_label)
+    plt.plot(training_stats, label='Training' + stats)
+    plt.plot(np.linspace(0, training_steps, test_steps), val_stats, label='Validation' + stats)
+    plt.ylim([0,max(plt.ylim())])
+    plt.legend(loc=legend_loc)
+    plt.show()

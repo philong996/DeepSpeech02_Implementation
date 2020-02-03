@@ -5,7 +5,7 @@ preprocess = {
 
 training = {    
     'epochs' : 100,
-    'batch_size' : 32
+    'batch_size' : 64
 }
 
 model_architecture = {

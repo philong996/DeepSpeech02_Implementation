@@ -25,6 +25,28 @@ def ctc_loss_lambda_func(y_true, y_pred):
     return loss
 
 
+class CollectBatchStats(tf.keras.callbacks.Callback):
+    def __init__(self):
+        self.batch_losses = []
+        # self.batch_acc = []
+        self.batch_val_losses = []
+        # self.batch_val_acc = []
+
+    def on_train_batch_end(self, batch, logs=None):
+        self.batch_losses.append(logs['loss'])
+        # self.batch_acc.append(logs['acc'])
+        # reset_metrics: the metrics returned will be only for this batch. 
+        # If False, the metrics will be statefully accumulated across batches.
+        self.model.reset_metrics()
+  
+    def on_test_batch_end(self, batch, logs=None):
+        self.batch_val_losses.append(logs['loss'])
+        # self.batch_val_acc.append(logs['acc'])
+        # reset_metrics: the metrics returned will be only for this batch. 
+        # If False, the metrics will be statefully accumulated across batches.
+        self.model.reset_metrics()
+
+
 def rnn(input_size, units, layers, is_bi, activation = 'relu', output_dim=29, learning_rate=3e-4):
     """ Build a recurrent network for speech recognition
     """
@@ -125,3 +147,4 @@ def deep_speech(input_size, units, rnn_layers, is_bi, activation = 'relu', outpu
     model.summary()
     
     return model
+
