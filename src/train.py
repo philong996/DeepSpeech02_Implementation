@@ -113,7 +113,7 @@ if __name__ == "__main__":
             model.load_weights(checkpoint_path)
         
         # add callbacks
-        batch_stats_callback = speech_models.CollectBatchStats()
+        # batch_stats_callback = speech_models.CollectBatchStats()
         callbacks = [
             ModelCheckpoint(
                 filepath=checkpoint_path,
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                 factor=0.2,
                 patience=10,
                 verbose=1),
-            batch_stats_callback
+            # batch_stats_callback
         ]
 
         #train model
@@ -144,13 +144,13 @@ if __name__ == "__main__":
                             steps_per_epoch = TRAIN_STEPS, 
                             callbacks= callbacks)
 
-        loss = {'loss' : batch_stats_callback.batch_losses, 
-        'val_loss' : batch_stats_callback.batch_val_losses}
+        # loss = {'loss' : batch_stats_callback.batch_losses, 
+        # 'val_loss' : batch_stats_callback.batch_val_losses}
 
         #save the result to compare models after training
         pickle_path = os.path.join('../checkpoints', args.model_name + '.pickle')
         with open(pickle_path, 'wb') as f:
-            pickle.dump(loss, f)
+            pickle.dump(history.history, f)
 
     if args.test_folder:
         
