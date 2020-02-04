@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 import librosa
 import re
@@ -177,17 +178,17 @@ def compute_spectrogram_feature(samples, sample_rate, stride_ms=10.0,
 
 
 def normalize_audio_feature(audio_feature):
-  """Perform mean and variance normalization on the spectrogram feature.
-  Args:
-    audio_feature: a numpy array for the spectrogram feature.
-  Returns:
-    a numpy array of the normalized spectrogram.
-  """
-  mean = np.mean(audio_feature, axis=0)
-  var = np.var(audio_feature, axis=0)
-  normalized = (audio_feature - mean) / (np.sqrt(var) + 1e-6)
+    """Perform mean and variance normalization on the spectrogram feature.
+    Args:
+        audio_feature: a numpy array for the spectrogram feature.
+    Returns:
+        a numpy array of the normalized spectrogram.
+    """
+    mean = np.mean(audio_feature, axis=0)
+    var = np.var(audio_feature, axis=0)
+    normalized = (audio_feature - mean) / (np.sqrt(var) + 1e-6)
 
-  return normalized
+    return normalized
 
 
 def mfcc_feature(file_path):
@@ -428,3 +429,45 @@ def plot_stats(training_stats, val_stats, x_label='Training Steps', stats='loss'
     plt.ylim([0,max(plt.ylim())])
     plt.legend(loc=legend_loc)
     plt.show()
+
+def get_data_detail(folder_name):	
+    ''' Get the information of data from data_info.txt	
+    '''	
+    ROOT = '../data'	
+
+    data_file = os.path.join(ROOT, folder_name, 'data_info.txt')	
+    with codecs.open(data_file , 'r') as f:	
+        lines = f.readlines()	
+
+    data_detail =  {	
+        'n_training' : int(lines[0].split(':')[-1]),	
+        'n_valid' : int(lines[2].split(':')[-1]),	
+        'n_test' : int(lines[1].split(':')[-1]),	
+        'max_label_length': int(lines[6].split(':')[-1]),	
+        'max_input_length': int(lines[5].split(':')[-1]),	
+        'data_folder' : lines[3].split(':')[-1].strip(),	
+        'num_features' : 161,	
+        'num_label' : 29	
+    }	
+    return data_detail	
+
+
+def decode_predictions(predictions, MAX_LABEL_LENGTH):	
+    '''Decode a prediction using tf.ctc_decode for the highest probable character at each	
+        timestep. Then, simply convert the integer sequence to text	
+    '''	
+    x_test = np.array(predictions)	
+    x_test_len = [MAX_LABEL_LENGTH for _ in range(len(x_test))]	
+    decode, log = K.ctc_decode(x_test,	
+                            x_test_len,	
+                            greedy=True,	
+                            beam_width=10,	
+                            top_paths=1)	
+
+    #probabilities = [np.exp(x) for x in log]	
+    predicts = [[[int(p) for p in x if p != -1] for x in y] for y in decode]	
+    predicts = np.swapaxes(predicts, 0, 1)	
+
+    predicts = [utils.idx_string(label[0]) for label in predicts]	
+
+    return predicts

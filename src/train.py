@@ -103,7 +103,7 @@ if __name__ == "__main__":
         'val_loss' : batch_stats_callback.batch_val_losses}
 
         #save the result to compare models after training
-        pickle_path = os.path.join('../checkpoints', args.model_name + '.pickle')
+        pickle_path = os.path.join('../checkpoints', args.model_name + '{}.pickle'.format(args.epochs))
         with open(pickle_path, 'wb') as f:
             pickle.dump(loss, f)
 
