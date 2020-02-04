@@ -136,7 +136,6 @@ if __name__ == "__main__":
 
         e_corpus = "\n".join([
             "Total test audios:    {}".format(len(valid_labels)),
-            "Total time:           {}\n".format(total_time),
             "Metrics:",
             "Character Error Rate: {}".format(evaluate[0]),
             "Word Error Rate:      {}".format(evaluate[1]),
