@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--test-folder", default=None , type=str, required=False)
     parser.add_argument("--crnn", action="store_true", default=False)
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
+    parser.add_argument("--ini-epochs", type=int, required=True)
 
     args = parser.parse_args()
 
@@ -68,7 +69,8 @@ if __name__ == "__main__":
         os.makedirs('../results/')
 
     #save result to prediction file
-    prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name + '_for_test_set'))
+    prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name + '_for_test_set_' + str(args.ini_epochs)))
+    
     with open(prediction_file, "w") as f:
         for pd, gt in zip(predicts, labels):
             f.write("Y {}\nP {}\n\n".format(gt, pd))
@@ -86,7 +88,7 @@ if __name__ == "__main__":
         "Sequence Error Rate:  {}".format(evaluate[2]),
     ])
 
-    evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model_name))
+    evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model_name + '_for_test_set_' + str(args.ini_epochs)))
     with open(evaluate_file, "w") as ev_f:
         ev_f.write(e_corpus)
         print(e_corpus)

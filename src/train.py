@@ -107,9 +107,12 @@ if __name__ == "__main__":
 
         loss = {'loss' : batch_stats_callback.batch_losses, 
         'val_loss' : batch_stats_callback.batch_val_losses}
-
+        
+        if not os.path.exists('../results/'):
+            os.makedirs('../results/')
+        
         #save the result to compare models after training
-        pickle_path = os.path.join('../checkpoints', args.model_name + '{}.pickle'.format('_' + args.ini_epochs + '_' + args.epochs))
+        pickle_path = os.path.join('../results', args.model_name + '{}.pickle'.format('_' + args.ini_epochs + '_' + args.epochs))
         with open(pickle_path, 'wb') as f:
             pickle.dump(loss, f)
 
@@ -121,11 +124,8 @@ if __name__ == "__main__":
         #decode predictions and save to txt file
         predicts = utils.decode_predictions(predictions, data_detail['max_label_length'])
         
-        if not os.path.exists('../results/'):
-            os.makedirs('../results/')
-        
         #save result to prediction file
-        prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name+ '_for_valid_set'))
+        prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name+ '_for_valid_set_' + str(args.ini_epochs + args.epochs)))
         
         with open(prediction_file, "w") as f:
             for pd, gt in zip(predicts, valid_labels):
@@ -143,7 +143,7 @@ if __name__ == "__main__":
             "Sequence Error Rate:  {}".format(evaluate[2]),
         ])
         
-        evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model_name + '_for_valid_set'))
+        evaluate_file = os.path.join('../results/', "evaluate_{}.txt".format(args.model_name + '_for_valid_set_' + str(args.ini_epochs + args.epochs)))
         with open(evaluate_file, "w") as ev_f:
             ev_f.write(e_corpus)
             print(e_corpus)
