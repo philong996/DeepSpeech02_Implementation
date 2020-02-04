@@ -15,7 +15,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--test-folder", default=None , type=str, required=False)
     parser.add_argument("--train-folder", type=str, required=False)
-
+    parser.add_argument("--crnn", action="store_true", default=False)
+    
     args = parser.parse_args()
 
     if not os.path.exists('../checkpoints'):
