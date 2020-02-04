@@ -52,7 +52,7 @@ def rnn(input_size, units, layers, is_bi, activation = 'relu', output_dim=29, le
     """
     # Main acoustic input
     input_data = Input(name='the_input', shape=(input_size[0], input_size[1]))
-
+    
     x = BatchNormalization()(input_data)
 
     if is_bi:

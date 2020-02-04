@@ -22,6 +22,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--train-folder", type=str, required=False)
+    parser.add_argument("--decode-valid", action="store_true", default=False)
     parser.add_argument("--crnn", action="store_true", default=False)
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
@@ -45,23 +46,26 @@ if __name__ == "__main__":
     else:
         model = speech_models.rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                 is_bi = config.model_architecture['is_bi'], 
-                                units = config.model_architecture['units_rnn'], 
-                                layers = config.model_architecture['rnn_layers'])
+                                units = 200, 
+                                layers = 2)
 
+    #prepare for training data
+    TRAIN_STEPS = int(data_detail['n_training'] / config.training['batch_size'])
+    VALID_STEPS = int(data_detail['n_valid'] / config.training['batch_size'])
+    
+    train_ds, train_labels = utils.get_dataset_from_tfrecords(data_detail,
+                                                            tfrecords_dir=data_detail['data_folder'], 
+                                                            split='train', 
+                                                            batch_size=config.training['batch_size'])
+    valid_ds, valid_labels = utils.get_dataset_from_tfrecords(data_detail,
+                                                            tfrecords_dir=data_detail['data_folder'], 
+                                                            split='valid', 
+                                                            batch_size=config.training['batch_size'])
+    
+    
+    
+    
     if args.train_folder:
-
-        #prepare for training data
-        TRAIN_STEPS = int(data_detail['n_training'] / config.training['batch_size'])
-        VALID_STEPS = int(data_detail['n_valid'] / config.training['batch_size'])
-        
-        train_ds, train_labels = utils.get_dataset_from_tfrecords(data_detail,
-                                                                 tfrecords_dir=data_detail['data_folder'], 
-                                                                 split='train', 
-                                                                 batch_size=config.training['batch_size'])
-        valid_ds, valid_labels = utils.get_dataset_from_tfrecords(data_detail,
-                                                                tfrecords_dir=data_detail['data_folder'], 
-                                                                split='valid', 
-                                                                batch_size=config.training['batch_size'])
 
         #load weight to continue training
         if os.path.isfile(checkpoint_path):
@@ -107,18 +111,13 @@ if __name__ == "__main__":
         with open(pickle_path, 'wb') as f:
             pickle.dump(loss, f)
 
-
-        ### Make prediction encode the prediction for valid set
-        try:
-            model.load_weights(checkpoint_path)
-        except:
-            print('There is no checkpoint file in the folder')
+    if args.decode_valid:
 
         #make predictions
         predictions = model.predict(valid_ds, steps = VALID_STEPS)
 
         #decode predictions and save to txt file
-        predicts = utils.decode_predictions(predictions, test_detail['max_label_length'])
+        predicts = utils.decode_predictions(predictions, data_detail['max_label_length'])
         
         if not os.path.exists('../results/'):
             os.makedirs('../results/')
