@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
+
 import librosa
 import re
 import soundfile
 import editdistance
 import datetime
+
 import codecs
 import csv
 import os
@@ -105,10 +107,10 @@ def create_main_metadata(SRC, DST):
                             au, sr = soundfile.read(path)
                             spec_length = compute_spectrogram_feature(au, sr).shape[0]
                             
-                            if spec_length > 2560:
-                                continue
-                            
                             label = label_idx(label)
+
+                            if spec_length > config.preprocess['max_input_length'] or len(label) > config.preprocess['max_label_length']:
+                                continue
                             
                             metadata_writer.writerow({
                                 'index':i,
@@ -212,8 +214,8 @@ class TFRecordsConverter:
         # Shuffle data by "sampling" the entire data-frame
         self.df = df.sample(frac=1, random_state=101)
 
-        self.max_input_len = 2560
-        self.max_label_len = self.df.label_length.max()
+        self.max_input_len =  config.preprocess['max_input_length']
+        self.max_label_len =  config.preprocess['max_label_length']
         
         n_samples = len(df)
         self.n_test = int(np.ceil(n_samples * test_size))

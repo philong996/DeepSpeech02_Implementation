@@ -1,6 +1,8 @@
 preprocess = {
-    'test_size': 0.2,
-    'valid_size': 0.2,
+    'test_size': 0,
+    'valid_size': 0.1,
+    'max_label_length': 400,
+    'max_input_length' : 2560
 }
 
 training = {    
