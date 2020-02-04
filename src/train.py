@@ -21,6 +21,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--train", action="store_true", default=False)
     parser.add_argument("--train-folder", type=str, required=False)
     parser.add_argument("--decode-valid", action="store_true", default=False)
     parser.add_argument("--crnn", action="store_true", default=False)
