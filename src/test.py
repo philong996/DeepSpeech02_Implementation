@@ -59,16 +59,16 @@ if __name__ == "__main__":
     #make predictions
     predictions = model.predict(test_ds, steps = TEST_STEPS)
 
-    total_time = datetime.datetime.now() - start_time
-
     #decode predictions and save to txt file
     predicts = utils.decode_predictions(predictions, data_detail['max_label_length'])
+
+    total_time = datetime.datetime.now() - start_time
 
     if not os.path.exists('../results/'):
         os.makedirs('../results/')
 
     #save result to prediction file
-    prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name))
+    prediction_file = os.path.join('../results/', 'predictions_{}.txt'.format(args.model_name + '_for_test_set'))
     with open(prediction_file, "w") as f:
         for pd, gt in zip(predicts, labels):
             f.write("Y {}\nP {}\n\n".format(gt, pd))

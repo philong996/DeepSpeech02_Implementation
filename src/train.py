@@ -25,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--train-folder", type=str, required=False)
     parser.add_argument("--decode-valid", action="store_true", default=False)
     parser.add_argument("--crnn", action="store_true", default=False)
+    parser.add_argument("--ini-epochs", type=int, default = 0)
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
     parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
 
@@ -108,7 +109,7 @@ if __name__ == "__main__":
         'val_loss' : batch_stats_callback.batch_val_losses}
 
         #save the result to compare models after training
-        pickle_path = os.path.join('../checkpoints', args.model_name + '{}.pickle'.format(args.epochs))
+        pickle_path = os.path.join('../checkpoints', args.model_name + '{}.pickle'.format('_' + args.ini_epochs + '_' + args.epochs))
         with open(pickle_path, 'wb') as f:
             pickle.dump(loss, f)
 
