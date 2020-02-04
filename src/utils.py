@@ -469,6 +469,6 @@ def decode_predictions(predictions, MAX_LABEL_LENGTH):
     predicts = [[[int(p) for p in x if p != -1] for x in y] for y in decode]	
     predicts = np.swapaxes(predicts, 0, 1)	
 
-    predicts = [utils.idx_string(label[0]) for label in predicts]	
+    predicts = [idx_string(label[0]) for label in predicts]	
 
     return predicts
