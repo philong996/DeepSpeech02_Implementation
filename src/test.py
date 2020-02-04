@@ -14,9 +14,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--test-folder", default=None , type=str, required=False)
-    parser.add_argument("--train-folder", type=str, required=False)
     parser.add_argument("--crnn", action="store_true", default=False)
-    
+    parser.add_argument("--model-name", type=str, required=True, help='Name of the model to save')
+
     args = parser.parse_args()
 
     if not os.path.exists('../checkpoints'):
@@ -25,25 +25,25 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join('../checkpoints', args.model_name + '.h5')
 
     #get test data detail
-    test_detail = utils.get_data_detail(args.train_folder)
+    data_detail = utils.get_data_detail(args.test_folder)
 
     if args.crnn:
         pass
-        model = speech_models.deep_speech(input_size = (test_detail['max_input_length'] , data_detail['num_features']), 
+        model = speech_models.deep_speech(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                     units = config.model_architecture['units_rnn'], 
                                     rnn_layers = config.model_architecture['rnn_layers'], 
                                     is_bi = config.model_architecture['is_bi'])
     else:
-        model = speech_models.rnn(input_size = (test_detail['max_input_length'] , data_detail['num_features']), 
+        model = speech_models.rnn(input_size = (data_detail['max_input_length'] , data_detail['num_features']), 
                                 is_bi = config.model_architecture['is_bi'], 
                                 units = config.model_architecture['units_rnn'], 
                                 layers = config.model_architecture['rnn_layers'])
 
     #prepare for testing data
-    TEST_STEPS = int(test_detail['n_test'] / config.training['batch_size'])
+    TEST_STEPS = int(data_detail['n_test'] / config.training['batch_size'])
 
-    test_ds, labels = utils.get_dataset_from_tfrecords(test_detail, 
-                                                    tfrecords_dir=test_detail['data_folder'], 
+    test_ds, labels = utils.get_dataset_from_tfrecords(data_detail, 
+                                                    tfrecords_dir=data_detail['data_folder'], 
                                                     split='test', 
                                                     batch_size=config.training['batch_size'])
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     total_time = datetime.datetime.now() - start_time
 
     #decode predictions and save to txt file
-    predicts = utils.decode_predictions(predictions, test_detail['max_label_length'])
+    predicts = utils.decode_predictions(predictions, data_detail['max_label_length'])
 
     if not os.path.exists('../results/'):
         os.makedirs('../results/')
