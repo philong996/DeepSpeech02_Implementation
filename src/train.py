@@ -66,7 +66,7 @@ if __name__ == "__main__":
     
     
     
-    if args.train_folder:
+    if args.train:
 
         #load weight to continue training
         if os.path.isfile(checkpoint_path):
