@@ -29,8 +29,8 @@ def get_data_detail(folder_name):
 
     data_detail =  {
         'n_training' : int(lines[0].split(':')[-1]),
-        'n_valid' : int(lines[1].split(':')[-1]),
-        'n_test' : int(lines[2].split(':')[-1]),
+        'n_valid' : int(lines[2].split(':')[-1]),
+        'n_test' : int(lines[1].split(':')[-1]),
         'max_label_length': int(lines[6].split(':')[-1]),
         'max_input_length': int(lines[5].split(':')[-1]),
         'data_folder' : lines[3].split(':')[-1].strip(),
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--train-folder", type=str, required=True)
+    parser.add_argument("--train-folder", type=str, required=False)
     parser.add_argument("--test-folder", default=None , type=str, required=False)
     parser.add_argument("--crnn", action="store_true", default=False)
     parser.add_argument("--epochs", type=int, default = config.training['epochs'])
