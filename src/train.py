@@ -112,7 +112,7 @@ if __name__ == "__main__":
             os.makedirs('../results/')
         
         #save the result to compare models after training
-        pickle_path = os.path.join('../results', args.model_name + '{}.pickle'.format('_' + args.ini_epochs + '_{}'.format(args.epochs)))
+        pickle_path = os.path.join('../results', args.model_name + '{}.pickle'.format('_' + str(args.ini_epochs) + '_' + str(args.epochs)))
         with open(pickle_path, 'wb') as f:
             pickle.dump(loss, f)
 
