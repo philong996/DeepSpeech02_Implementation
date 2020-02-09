@@ -2,5 +2,3 @@ librosa==0.7.2
 numpy==1.17.3
 pandas==0.25.3
 SoundFile==0.10.2
-tensorflow==2.0.1
-tqdm==4.40.2
