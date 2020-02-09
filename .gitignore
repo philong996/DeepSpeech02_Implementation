@@ -8,6 +8,5 @@ checkpoints/
 ./src/notebooks/.ipynb_checkpoints/
 Reference/
 results/
-app/
 notebooks/
 models/
