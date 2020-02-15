@@ -9,4 +9,5 @@ checkpoints/
 Reference/
 results/
 notebooks/
-models/
+DS_models/
+demo_app/static/talks_for_app/
