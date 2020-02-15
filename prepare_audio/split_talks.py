@@ -18,7 +18,7 @@ def trim_audio(audio, sentence):
     return audio[start:stop]
 
     
-def preprocess_sent(audio_idx, parent_dir, folder_path):
+def preprocess_sent(audio_idx, parent_dir, folder_path = None):
     
     #read the transcript pickle file
     transcript_path = os.path.join(parent_dir, str(audio_idx), 'transcript.pickle')   

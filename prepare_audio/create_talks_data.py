@@ -1,6 +1,7 @@
 import os
 import shutil
 import argparse
+from tqdm import tqdm
 
 import pandas as pd
 import pickle
@@ -24,8 +25,6 @@ def prepare_talks_data(num_talks, ted_main_dir):
 
     #just get neccesary information
     talks_data = talks_data[['name','title','main_speaker','description','duration','ratings','tags']].head(num_talks)
-
-    talks_data.reset_index()
     
     return talks_data
 
@@ -40,7 +39,7 @@ def search_id(name):
 
 
 def get_transcript(youtube_idx, idx ,parent_dir):
-    talks_path = os.path.join(parent_dir, str(idx))
+    talks_path = os.path.join(parent_dir, str(youtube_idx))
 
     if os.path.exists(talks_path):
         shutil.rmtree(talks_path)
@@ -56,11 +55,12 @@ def get_transcript(youtube_idx, idx ,parent_dir):
     with open(trans_path, 'wb') as f:
         pickle.dump(transcript, f)
 
-def get_audio(youtube_idx, idx ,parent_dir):
+
+def get_audio(youtube_idx, parent_dir):
     url = 'https://www.youtube.com/watch?v={}'.format(youtube_idx)
     video = pafy.new(url) 
 
-    audio_path = os.path.join(parent_dir, str(idx), '{}.webm'.format(idx))
+    audio_path = os.path.join(parent_dir, str(youtube_idx), '{}.webm'.format(youtube_idx))
  
     bestaudio = video.getbestaudio() 
     bestaudio.download(filepath = audio_path) 
@@ -83,24 +83,26 @@ if __name__ == "__main__":
 
     youtube_indices = []
 
-    for idx, name in enumerate(names):
+    for idx, name in tqdm(enumerate(names)):
         #get video index
         youtube_idx = search_id(name)
-
-        #add youtube index to indices
-        youtube_indices.append(youtube_idx)
         
         #save transcript
         get_transcript(youtube_idx, idx ,PARENT_DIR)
 
+        #add youtube index to indices
+        youtube_indices.append(youtube_idx)
+
         #down audio from talk
-        get_audio(youtube_idx, idx ,PARENT_DIR)
+        get_audio(youtube_idx ,PARENT_DIR)
 
         #convert the webm file to wav file
-        os.system("ffmpeg -i {0}.webm -ac 1 -ar 16000 {0}.wav".format(os.path.join(PARENT_DIR, str(idx), str(idx))))
-        os.system("rm {}.webm".format(os.path.join(PARENT_DIR, str(idx), str(idx))))
+        os.system("ffmpeg -i {0}.webm -ac 1 -ar 16000 {0}.wav".format(os.path.join(PARENT_DIR, str(youtube_idx), str(youtube_idx))))
+        os.system("rm {}.webm".format(os.path.join(PARENT_DIR, str(youtube_idx), str(youtube_idx))))
 
     #save the final result
     talks_data['youtube_idx'] = youtube_indices
-    talks_data.to_csv(os.path.join(PARENT_DIR,'talks_data.csv'),index=False)
+    
+    talks_data = talks_data.reset_index()
+    talks_data.to_csv(os.path.join(PARENT_DIR,'talks_data.csv'), columns = ['index','name','title','main_speaker','description','duration','ratings','tags','youtube_idx'])
     
