@@ -9,13 +9,24 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="description" content="Lingua project">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="../static/css/bootstrap4/bootstrap.min.css">
+        
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
         <link href="../static/fonts/font-awesome-4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" type="text/css" href="../static/css/OwlCarousel2-2.2.1/owl.carousel.css">
         <link rel="stylesheet" type="text/css" href="../static/css/OwlCarousel2-2.2.1/owl.theme.default.css">
         <link rel="stylesheet" type="text/css" href="../static/css/OwlCarousel2-2.2.1/animate.css">
         <link rel="stylesheet" type="text/css" href="../static/css/main_styles.css">
         <link rel="stylesheet" type="text/css" href="../static/css/responsive.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/blog.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/blog_responsive.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/instructors.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/instructors_responsive.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/course.css">
+        <link rel="stylesheet" type="text/css" href="../static/css/course_responsive.css">
     </head>
 
     <body>
@@ -29,16 +40,15 @@
                         <div class="col">
                             <div class="header_content d-flex flex-row align-items-center justify-content-start">
                                 <div class="logo_container mr-auto">
-                                    <a href="#">
-                                        <div class="logo_text">Lingua</div>
+                                    <a href="{{url_for('homepage.index')}}">
+                                        <div class="logo_text">Langfarm</div>
                                     </a>
                                 </div>
                                 <nav class="main_nav_contaner">
                                     <ul class="main_nav">
-                                        <li class="active"><a href="index.html">Home</a></li>
-                                        <li><a href="courses.html">Courses</a></li>
-                                        <li><a href="#">Events</a></li>
-                                        <li><a href="contact.html">Contact</a></li>
+                                        <li class="active"><a href="{{url_for('homepage.index')}}">Home</a></li>
+                                        <li><a href="#">Lessons</a></li>
+                                        <li><a href="#">Categories</a></li>
                                     </ul>
                                 </nav>
                                 <div class="header_content_right ml-auto text-right">
@@ -68,7 +78,7 @@
             </div>
         </header>
 
-        <!-- Home -->
+        <!-- Content -->
         {% block content %}{% endblock %}
 
         <!-- Footer -->
@@ -76,7 +86,7 @@
             <div class="footer_body">
                 <div class="container">
                     <div class="row">
-                        <div class="footer_logo mb-auto"><a href="#">Lingua</a></div>
+                        <div class="footer_logo mb-auto"><a href="#">Langfarm</a></div>
                     </div>
                 </div>
             </div>
@@ -86,8 +96,7 @@
                         <div class="col">
                             <div class="copyright_content d-flex flex-md-row flex-column align-items-md-center align-items-start justify-content-start">
                                 <div class="cr"><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-        Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-        <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></div>
+        Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved <i class="fa fa-heart-o" aria-hidden="true"></i></div>
                                 <div class="cr_right ml-md-auto">
                                     <div class="footer_social">
                                         <span class="cr_social_title">About</span>
@@ -106,11 +115,12 @@
 
 
         <script src="../static/js/jquery-3.2.1.min.js"></script>
-        <script src="../static/css/bootstrap4/popper.js"></script>
-        <script src="../static/css/bootstrap4/bootstrap.min.js"></script>
         <script src="../static/css/OwlCarousel2-2.2.1/owl.carousel.js"></script>
         <script src="../static/js/easing/easing.js"></script>
         <script src="../static/js/custom.js"></script>
+        <script src="../static/js/parallax-js-master/parallax.min.js"></script>
+        <script src="../static/js/blog.js"></script>
+        <script src="../static/js/course.js"></script>
     </body>
 
 </html>

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <!-- Home -->
+    <div class="home">
+        <div class="home_background" style="background-image: url(../static/img/index_background.jpg);"></div>
+        <div class="home_content">
+            <div class="container">
+                <div class="row">
+                    <div class="col text-center">
+                        <h1 class="home_title">Learn Languages Easily</h1>
+                        <div class="home_button trans_200"><a href="#">get started</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	<!-- Blog -->
+	<div class="blog">
+		<div class="container">
+			<div class="row">
+				<div class="col">
+					<div class="welcome_title">Welcome to Lessons Library!</div>
+				</div>
+			</div>
+			
+			<div class="row categories_row">
+				
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/ted_cate.jpg" alt=""></div>
+							<div class="blog_category_title">ted</div>
+						</div>
+					</a>
+				</div>
+
+
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/blog_1.jpg" alt=""></div>
+							<div class="blog_category_title">travel</div>
+						</div>
+					</a>
+				</div>
+
+				
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/blog_3.jpg" alt=""></div>
+							<div class="blog_category_title">cultures</div>
+						</div>
+					</a>
+				</div>
+
+
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/blog_4.jpg" alt=""></div>
+							<div class="blog_category_title">fashion</div>
+						</div>
+					</a>
+				</div>
+
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/blog_5.jpg" alt=""></div>
+							<div class="blog_category_title">cooking</div>
+						</div>
+					</a>
+				</div>
+
+				<!-- Category -->
+				<div class="col-xl-2 col-lg-4 col-md-6 blog_category_col">
+					<a href="blog.html">
+						<div class="blog_category">
+							<div class="blog_category_image"><img src="../static/img/blog_6.jpg" alt=""></div>
+							<div class="blog_category_title">hobbies</div>
+						</div>
+					</a>
+				</div>
+			</div>
+
+			<!-- Blog Posts -->
+
+			<div class="row blog_row">
+				{% for video in video_data %}
+				<!-- Blog Post -->
+				<div class="col-lg-6">
+					<div class="blog_post">
+						<div class="blog_image" style="background-image:url({{'https://img.youtube.com/vi/{}/hqdefault.jpg'.format(video[-1])}})"></div>
+						<div class="blog_title_container">
+							<div class="blog_post_category"><a href="#">travel</a></div>
+							<div class="blog_post_title"><a href="{{url_for('lessonpage.display', video_id = video[-1])}}">{{video[3]}}</a></div>
+							<div class="blog_post_category"><a href="blog_single.html">{{video[4]}}</a></div>
+							<div class="blog_post_text">
+								<p>{{video[5][:150] + '...'}}.</p>
+							</div>
+							<div class="read_more"><a href="blog_single.html">Read More <img src="../static/img/right.png" alt=""></a></div>
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+
+			<!-- Load More -->
+			<div class="row">
+				<div class="col">
+					<div class="load_more_button"><a href="#">load more</a></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}

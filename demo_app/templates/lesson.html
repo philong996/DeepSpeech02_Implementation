@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Lesson{% endblock %}
+
+{% block content %}
+
+<div class="home"></div>
+
+<!-- Video -->
+
+<div class="intro">
+    <div class="intro_background parallax-window" data-parallax="scroll">
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="intro_container d-flex flex-column align-items-start justify-content-end">
+                    <iframe id="video" class="video-js vjs-default-skin" type="text/html"
+                    src="http://www.youtube.com/embed/{{video_id}}"
+                    frameborder="0"
+                    allow='autoplay'></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transcript -->
+<div class="course">
+    <div class="course_top"></div>
+    <div class="container">
+        <div class="row row-lg-eq-height">
+
+            <!-- Panels -->
+            <div class="col-lg-9">
+                <div class="tab_panels">
+
+                    <!-- Tabs -->
+                    <div class="course_tabs_container">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-lg-9">
+                                    <div class="tabs d-flex flex-row align-items-center justify-content-start">
+                                        <div class="tab active">Transcript</div>
+                                        <div class="tab">Detail</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>		
+                    </div>
+
+                    <!-- Description -->
+                    <div class="tab_panel description active">
+                        <div class="panel_title">Practice with the video transcript</div> <br>
+                        <audio id="myAudio" controls>
+                            <source src="../static/talks_for_app/{{video_id}}/{{video_id}}.wav" type="audio/wav">
+                            Your browser does not support the audio tag.
+                        </audio>
+                       
+                        <div class="accordions">
+												
+                            <div class="elements_accordions">
+                                {% for sentence in sentence_data %}
+                                <div class="accordion_container">
+                                    <div class="accordion d-flex flex-row align-items-center"><div>Sentence {{loop.index}}</div></div>
+                                    <div class="accordion_panel">
+                                        
+                                        <a id="sentence-{{loop.index}}" onclick="clickSentence({{sentence[2]}}, {{sentence[3]}})" md-start={{sentence[2]}} md-dur={{sentence[3]}}><p><i class="fa fa-volume-up" aria-hidden="true"></i> {{sentence[1]}}</p></a><br>
+                                        <p id="result-{{loop.index}}" ><i id="icon-{{loop.index}}" style="visibility:visible;" class="fa fa-commenting-o" aria-hidden="true">Your result....</i></p>
+                                        
+                                        <div class="d-flex justify-content-center">
+                                            <div id="spinner-{{loop.index}}" class="spinner-grow" role="status" style="visibility:hidden;">
+                                                <span class="sr-only">Loading...</span><br>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <button class="btn btn-outline-primary btn-sm recordButton" onclick="toggleRecording({{loop.index}})"><i class="fa fa-microphone" aria-hidden="true"> Record</i></button>
+                                        </div> <br>
+                                        <div id="record-{{loop.index}}">
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {{ pagination.links }}
+                        </div>
+                    </div>
+
+                    <!-- Detail -->
+                    <div class="tab_panel curriculum">
+                        <div class="panel_title">Wait for database</div>
+                        <div class="panel_text">
+                            <p>Wait for database</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="sidebar">
+                    <div class="sidebar_background"></div>
+                    <div class="sidebar_top"><a href="#">Your Progress</a></div>
+                    <div class="sidebar_content">
+
+                        <!-- Features -->
+                        <div class="sidebar_section features">
+                            <div class="sidebar_title">Course Features</div>
+                            <div class="features_content">
+                                <ul class="features_list">
+
+                                    <!-- Feature -->
+                                    <li class="d-flex flex-row align-items-start justify-content-start">
+                                        <div class="feature_title"><i class="fa fa-clock-o" aria-hidden="true"></i><span>Duration</span></div>
+                                        <div class="feature_text ml-auto">Wait for database</div>
+                                    </li>
+
+                                    <!-- Feature -->
+                                    <li class="d-flex flex-row align-items-start justify-content-start">
+                                        <div class="feature_title"><i class="fa fa-bell" aria-hidden="true"></i><span>Lectures</span></div>
+                                        <div class="feature_text ml-auto">10</div>
+                                    </li>
+
+                                    <!-- Feature -->
+                                    <li class="d-flex flex-row align-items-start justify-content-start">
+                                        <div class="feature_title"><i class="fa fa-id-badge" aria-hidden="true"></i><span>Sentences</span></div>
+                                        <div class="feature_text ml-auto">{{total}}</div>
+                                    </li>
+
+                                    <!-- Feature -->
+                                    <li class="d-flex flex-row align-items-start justify-content-start">
+                                        <div class="feature_title"><i class="fa fa-thumbs-up" aria-hidden="true"></i><span>Pass Percentage</span></div>
+                                        <div class="feature_text ml-auto">0%</div>
+                                    </li>
+                                    
+                                    <!-- Feature -->
+                                    <li class="d-flex flex-row align-items-start justify-content-start">
+                                        <div class="feature_title"><i class="fa fa-tags" aria-hidden="true"></i><span>Tags  </span></div><br>
+                                        <div class="feature_text ml-auto">
+                                            <span class="badge badge-pill badge-primary">Wait for database</span>
+                                        </div>
+                                    </li>
+                                    
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- You may like -->
+                        <div class="sidebar_section like">
+                            <div class="sidebar_title">You may like</div>
+                            <div class="like_items">
+
+                                <!-- Like Item -->
+                                <div class="like_item d-flex flex-row align-items-end justify-content-start">
+                                    <div class="like_title_container">
+                                        <div class="like_title">Vocabulary</div>
+                                        <div class="like_subtitle">Spanish</div>
+                                    </div>
+                                    <div class="like_price ml-auto">Free</div>
+                                </div>
+                                <!-- Like Item -->
+                                <div class="like_item d-flex flex-row align-items-end justify-content-start">
+                                    <div class="like_title_container">
+                                        <div class="like_title">Vocabulary</div>
+                                        <div class="like_subtitle">Spanish</div>
+                                    </div>
+                                    <div class="like_price ml-auto">Free</div>
+                                </div>
+                                <!-- Like Item -->
+                                <div class="like_item d-flex flex-row align-items-end justify-content-start">
+                                    <div class="like_title_container">
+                                        <div class="like_title">Vocabulary</div>
+                                        <div class="like_subtitle">Spanish</div>
+                                    </div>
+                                    <div class="like_price ml-auto">Free</div>
+                                </div>
+                                <!-- Like Item -->
+                                <div class="like_item d-flex flex-row align-items-end justify-content-start">
+                                    <div class="like_title_container">
+                                        <div class="like_title">Vocabulary</div>
+                                        <div class="like_subtitle">Spanish</div>
+                                    </div>
+                                    <div class="like_price ml-auto">Free</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div class="language_slider_container">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../static/js/recorder.js"></script>
+{% endblock %}
