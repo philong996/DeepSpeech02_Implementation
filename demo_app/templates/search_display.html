@@ -4,26 +4,25 @@
 
 {% block content %}
 
-<div class="home"></div>
-
-<!-- Video -->
-
+<!-- intro -->
 <div class="intro">
-    <div class="intro_background parallax-window" data-parallax="scroll">
-    </div>
+    <div class="intro_background parallax-window" data-parallax="scroll" data-image-src="../static/img/vocab.jpg" data-speed="0.8"></div>
     <div class="container">
         <div class="row">
             <div class="col">
                 <div class="intro_container d-flex flex-column align-items-start justify-content-end">
-                    <iframe id="video" video-id="{{video_id}}" class="video-js vjs-default-skin" type="text/html"
-                    src="http://www.youtube.com/embed/{{video_id}}"
-                    frameborder="0"
-                    allow='autoplay'></iframe>
+                    <div class="intro_content">
+                        <div class="intro_title text-uppercase">{{keyword}}</div>
+                        <div class="intro_meta">
+                            <div class="intro_instructors"><a href="instructors.html">Sarah Parker</a> and <span><a href="instructors.html">5 other instructors</a></span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </div>		
 </div>
+
 
 <!-- Transcript -->
 <div class="course">
@@ -41,8 +40,7 @@
                             <div class="row">
                                 <div class="col-lg-9">
                                     <div class="tabs d-flex flex-row align-items-center justify-content-start">
-                                        <div class="tab active">Transcript</div>
-                                        <div class="tab">Detail</div>
+                                        <div class="tab active">Sentences</div>
                                     </div>
                                 </div>
                             </div>
@@ -51,31 +49,28 @@
 
                     <!-- Description -->
                     <div class="tab_panel description active">
-                        <div class="panel_title">Practice with the video transcript</div> <br>
-                        <audio id="myAudio" controls>
-                            <source src="../static/talks_for_app/{{video_id}}/{{video_id}}.wav" type="audio/wav">
-                            Your browser does not support the audio tag.
-                        </audio>
-                       
                         <div class="accordions">
 												
                             <div class="elements_accordions">
-                                {% for sentence in sentence_data %}
+                                {% for idx in sentence_data %}
                                 <div class="accordion_container">
-                                    <div class="accordion d-flex flex-row align-items-center"><div><p id="label-{{loop.index}}">{{sentence[1]}}</p></div></div>
+                                    <div class="accordion d-flex flex-row align-items-center"><div><p class="font-weight-bold" id="label-{{loop.index}}">{{result[idx]}}</p></div></div>
                                     <div class="accordion_panel">
-                                        
-                                        <!-- <a id="sentence-{{loop.index}}" onclick="clickSentence({{sentence[2]}}, {{sentence[3]}})" md-start={{sentence[2]}} md-dur={{sentence[3]}}></a><br> -->
-                                        <span><i id="icon-{{loop.index}}" style="visibility:visible;" class="fa fa-commenting-o" aria-hidden="true">Your result.... </i></span><span id="final-result-{{loop.index}}"></span>
+                                        <span><i id="icon-{{loop.index}}" style="visibility:visible;" class="fa fa-commenting-o" aria-hidden="true">Your result. . . .  </i> </span><span id="final-result-{{loop.index}}"></span>
                                         
                                         <div class="d-flex justify-content-center">
                                             <div id="spinner-{{loop.index}}" class="spinner-grow" role="status" style="visibility:hidden;">
                                                 <span class="sr-only">Loading...</span><br>
                                             </div>
                                         </div>
-                                        
+                                        <!-- <div>
+                                            <audio id="Audio-{{loop.index}}" controls>
+                                                <source src="https://audio.tatoeba.org/sentences/eng/{{sent_id[i]}}.mp3" type="audio/wav">
+                                                Your browser does not support the audio tag.
+                                            </audio>
+                                        </div> -->
                                         <div>
-                                            <button class="btn btn-outline-primary btn-sm recordButton" onclick="clickSentence({{sentence[2]}}, {{sentence[3]}})"><i class="fa fa-volume-up" aria-hidden="true"> Play</i></button>
+                                            <button class="btn btn-outline-primary btn-sm recordButton" onclick="clickSentence({{idx}})"><i class="fa fa-volume-up" aria-hidden="true"> Play</i></button>
                                             <button class="btn btn-outline-primary btn-sm recordButton" onclick="toggleRecording({{loop.index}})"><i class="fa fa-microphone" aria-hidden="true"> Record</i></button>
                                         </div> <br>
                                         <div id="record-{{loop.index}}">
@@ -85,10 +80,10 @@
                                 </div>
                                 {% endfor %}
                             </div>
-                        {{ pagination.links }}
+                        
                         </div>
                     </div>
-
+                    {{ pagination.links }}
                     <!-- Detail -->
                     <div class="tab_panel curriculum">
                         <div class="panel_title">Wait for database</div>
@@ -108,26 +103,14 @@
 
                         <!-- Features -->
                         <div class="sidebar_section features">
-                            <div class="sidebar_title">Course Features</div>
+                            <div class="sidebar_title">Word Features</div>
                             <div class="features_content">
                                 <ul class="features_list">
 
                                     <!-- Feature -->
                                     <li class="d-flex flex-row align-items-start justify-content-start">
-                                        <div class="feature_title"><i class="fa fa-clock-o" aria-hidden="true"></i><span>Duration</span></div>
-                                        <div class="feature_text ml-auto">Wait for database</div>
-                                    </li>
-
-                                    <!-- Feature -->
-                                    <li class="d-flex flex-row align-items-start justify-content-start">
-                                        <div class="feature_title"><i class="fa fa-bell" aria-hidden="true"></i><span>Lectures</span></div>
-                                        <div class="feature_text ml-auto">10</div>
-                                    </li>
-
-                                    <!-- Feature -->
-                                    <li class="d-flex flex-row align-items-start justify-content-start">
                                         <div class="feature_title"><i class="fa fa-id-badge" aria-hidden="true"></i><span>Sentences</span></div>
-                                        <div class="feature_text ml-auto">{{total}}</div>
+                                        <div class="feature_text ml-auto">{{sent_id|length}}</div>
                                     </li>
 
                                     <!-- Feature -->
@@ -138,7 +121,7 @@
                                     
                                     <!-- Feature -->
                                     <li class="d-flex flex-row align-items-start justify-content-start">
-                                        <div class="feature_title"><i class="fa fa-tags" aria-hidden="true"></i><span>Tags  </span></div><br>
+                                        <div class="feature_title"><i class="fa fa-tags" aria-hidden="true"></i><span>Tags</span></div><br>
                                         <div class="feature_text ml-auto">
                                             <span class="badge badge-pill badge-primary">Wait for database</span>
                                         </div>
@@ -150,7 +133,7 @@
 
                         <!-- You may like -->
                         <div class="sidebar_section like">
-                            <div class="sidebar_title">You may like</div>
+                            <div class="sidebar_title">Nearby Words</div>
                             <div class="like_items">
 
                                 <!-- Like Item -->
@@ -195,8 +178,6 @@
 </div>
 
 
-
-
 <div class="container">
     <div class="row">
         <div class="col">
@@ -206,6 +187,6 @@
     </div>
 </div>
 
-<script type="text/javascript" src="../static/js/difflib-browser.js"></script>
-<script src="../static/js/recorder.js"></script>
 {% endblock %}
+
+
