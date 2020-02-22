@@ -13,7 +13,7 @@ def try_eval(ele):
 @homepage.route('/', methods=['GET', 'POST'])
 def index():
 
-    sent_df = pd.read_csv("../data/sentences_tatoeba/eng_sentences_audio.csv", index_col=0)
+    sent_df = pd.read_csv("../data/sentences_tatoeba/final_eng_sentences_audio.csv", index_col=0)
   
     result = sent_df.sample(n=20)['text'].to_dict()
     

@@ -9,6 +9,4 @@ checkpoints/
 Reference/
 results/
 notebooks/
-demo_app/static/talks_for_app/
-demo_app/static/DS_models/
-demo_app/static/sentences/
+demo_app/
